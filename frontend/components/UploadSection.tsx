@@ -1,15 +1,15 @@
-import { motion } from "framer-motion";
-import FileUpload from "./FileUpload";
-import { SUPPORTED_LANGUAGES } from "@/lib/types";
-import type { SupportedLanguage } from "@/lib/types";
+import { motion } from 'framer-motion'
+import FileUpload from './FileUpload'
+import { SUPPORTED_LANGUAGES } from '@/lib/types'
+import type { SupportedLanguage } from '@/lib/types'
 
 interface UploadSectionProps {
-  file: File | null;
-  setFile: (file: File | null) => void;
-  language: SupportedLanguage;
-  setLanguage: (lang: SupportedLanguage) => void;
-  handleAnalyze: () => void;
-  error: string | null;
+  file: File | null
+  setFile: (file: File | null) => void
+  language: SupportedLanguage
+  setLanguage: (lang: SupportedLanguage) => void
+  handleAnalyze: () => void
+  error: string | null
 }
 
 export default function UploadSection({
@@ -37,11 +37,7 @@ export default function UploadSection({
         </p>
       </div>
 
-      <FileUpload
-        file={file}
-        onFileSelect={setFile}
-        onClear={() => setFile(null)}
-      />
+      <FileUpload file={file} onFileSelect={setFile} onClear={() => setFile(null)} />
 
       <div className="card p-6">
         <label
@@ -69,13 +65,13 @@ export default function UploadSection({
         disabled={!file}
         className={`w-full py-4 rounded-lg font-medium transition-all ${
           file
-            ? "btn-primary w-full cursor-pointer"
-            : "btn-primary w-full opacity-50 cursor-not-allowed"
+            ? 'btn-primary w-full cursor-pointer'
+            : 'btn-primary w-full opacity-50 cursor-not-allowed'
         }`}
         whileTap={file ? { scale: 0.98 } : undefined}
         id="analyze-btn"
       >
-        {file ? "🔍 Analyze Report" : "Upload a file to continue"}
+        {file ? '🔍 Analyze Report' : 'Upload a file to continue'}
       </motion.button>
 
       {error && (
@@ -91,5 +87,5 @@ export default function UploadSection({
         </motion.div>
       )}
     </motion.div>
-  );
+  )
 }

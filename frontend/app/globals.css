@@ -1,14 +1,14 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 @theme inline {
-  --color-black: #0A0A0A;
-  --color-white: #FFFFFF;
-  --color-gray-50: #FAFAFA;
-  --color-gray-100: #F4F4F5;
-  --color-gray-200: #E4E4E7;
-  --color-gray-500: #71717A;
-  --color-gray-800: #27272A;
-  
+  --color-black: #0a0a0a;
+  --color-white: #ffffff;
+  --color-gray-50: #fafafa;
+  --color-gray-100: #f4f4f5;
+  --color-gray-200: #e4e4e7;
+  --color-gray-500: #71717a;
+  --color-gray-800: #27272a;
+
   --color-background: var(--color-white);
   --color-foreground: var(--color-black);
   --color-surface: var(--color-white);
@@ -23,14 +23,14 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --color-background: #0A0A0A;
-    --color-foreground: #FFFFFF;
-    --color-surface: #0A0A0A;
-    --color-surface-alt: #18181B; /* zinc-900 */
-    --color-card: #27272A;
-    --color-border: #3F3F46; /* zinc-700 */
-    --color-muted: #A1A1AA; /* zinc-400 */
-    --color-dark: #FAFAFA;
+    --color-background: #0a0a0a;
+    --color-foreground: #ffffff;
+    --color-surface: #0a0a0a;
+    --color-surface-alt: #18181b; /* zinc-900 */
+    --color-card: #27272a;
+    --color-border: #3f3f46; /* zinc-700 */
+    --color-muted: #a1a1aa; /* zinc-400 */
+    --color-dark: #fafafa;
   }
 }
 
@@ -45,7 +45,10 @@ html {
 body {
   background: var(--color-background);
   color: var(--color-foreground);
-  font-family: var(--font-sans), system-ui, -apple-system;
+  font-family:
+    var(--font-sans),
+    system-ui,
+    -apple-system;
   min-height: 100vh;
 }
 
@@ -164,7 +167,9 @@ body {
 
 /* Respect reduced motion */
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
+  *,
+  *::before,
+  *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;

@@ -60,7 +60,9 @@ describe('FileUpload Component', () => {
     const input = document.getElementById('file-upload-input') as HTMLInputElement
 
     if (input) {
-      const oversized = new File([new ArrayBuffer(5 * 1024 * 1024)], 'huge.png', { type: 'image/png' })
+      const oversized = new File([new ArrayBuffer(5 * 1024 * 1024)], 'huge.png', {
+        type: 'image/png',
+      })
       Object.defineProperty(input, 'files', { value: [oversized] })
       fireEvent.change(input)
       // processFile is async, give it a tick
@@ -76,18 +78,19 @@ describe('FileUpload Component', () => {
     const mockDrawImage = vi.fn()
     const mockToBlob = vi.fn((cb) => cb(new Blob(['compressed'])))
     // @ts-expect-error mocking getContext is tricky with types
-    HTMLCanvasElement.prototype.getContext = () => ({
-      drawImage: mockDrawImage,
-    }) as unknown as CanvasRenderingContext2D
+    HTMLCanvasElement.prototype.getContext = () =>
+      ({
+        drawImage: mockDrawImage,
+      }) as unknown as CanvasRenderingContext2D
     HTMLCanvasElement.prototype.toBlob = mockToBlob
 
     // Mock Image
     const originalImage = window.Image
     window.Image = class {
-      onload: () => void = () => {};
-      src: string = '';
-      width = 2000;
-      height = 2000;
+      onload: () => void = () => {}
+      src: string = ''
+      width = 2000
+      height = 2000
       constructor() {
         setTimeout(() => this.onload(), 10)
       }
@@ -96,12 +99,12 @@ describe('FileUpload Component', () => {
     const onFileSelect = vi.fn()
     const file = new File([new ArrayBuffer(2 * 1024 * 1024)], 'big.jpg', { type: 'image/jpeg' })
     render(<FileUpload file={null} onFileSelect={onFileSelect} onClear={vi.fn()} />)
-    
+
     const input = document.getElementById('file-upload-input') as HTMLInputElement
     if (input) {
       Object.defineProperty(input, 'files', { value: [file] })
       fireEvent.change(input)
-      
+
       await waitFor(() => {
         expect(mockDrawImage).toHaveBeenCalled()
         expect(onFileSelect).toHaveBeenCalled()
@@ -114,17 +117,18 @@ describe('FileUpload Component', () => {
     const mockDrawImage = vi.fn()
     const mockToBlob = vi.fn((cb) => cb(null)) // null blob
     // @ts-expect-error mocking getContext
-    HTMLCanvasElement.prototype.getContext = () => ({
-      drawImage: mockDrawImage,
-    }) as unknown as CanvasRenderingContext2D
+    HTMLCanvasElement.prototype.getContext = () =>
+      ({
+        drawImage: mockDrawImage,
+      }) as unknown as CanvasRenderingContext2D
     HTMLCanvasElement.prototype.toBlob = mockToBlob
 
     const originalImage = window.Image
     window.Image = class {
-      onload: () => void = () => {};
-      src: string = '';
-      width = 2000;
-      height = 2000;
+      onload: () => void = () => {}
+      src: string = ''
+      width = 2000
+      height = 2000
       constructor() {
         setTimeout(() => this.onload(), 10)
       }
@@ -133,12 +137,12 @@ describe('FileUpload Component', () => {
     const onFileSelect = vi.fn()
     const file = new File([new ArrayBuffer(2 * 1024 * 1024)], 'big.jpg', { type: 'image/jpeg' })
     render(<FileUpload file={null} onFileSelect={onFileSelect} onClear={vi.fn()} />)
-    
+
     const input = document.getElementById('file-upload-input') as HTMLInputElement
     if (input) {
       Object.defineProperty(input, 'files', { value: [file] })
       fireEvent.change(input)
-      
+
       await waitFor(() => {
         expect(onFileSelect).toHaveBeenCalledWith(file) // original file, not compressed
       })
@@ -148,14 +152,16 @@ describe('FileUpload Component', () => {
 
   it('falls back to original file when compression throws an error', async () => {
     // Mocking getContext to throw
-    HTMLCanvasElement.prototype.getContext = () => { throw new Error('canvas fail') }
+    HTMLCanvasElement.prototype.getContext = () => {
+      throw new Error('canvas fail')
+    }
 
     const originalImage = window.Image
     window.Image = class {
-      onload: () => void = () => {};
-      src: string = '';
-      width = 2000;
-      height = 2000;
+      onload: () => void = () => {}
+      src: string = ''
+      width = 2000
+      height = 2000
       constructor() {
         setTimeout(() => this.onload(), 10)
       }
@@ -164,12 +170,12 @@ describe('FileUpload Component', () => {
     const onFileSelect = vi.fn()
     const file = new File([new ArrayBuffer(2 * 1024 * 1024)], 'big.jpg', { type: 'image/jpeg' })
     render(<FileUpload file={null} onFileSelect={onFileSelect} onClear={vi.fn()} />)
-    
+
     const input = document.getElementById('file-upload-input') as HTMLInputElement
     if (input) {
       Object.defineProperty(input, 'files', { value: [file] })
       fireEvent.change(input)
-      
+
       await waitFor(() => {
         expect(onFileSelect).toHaveBeenCalledWith(file)
       })
@@ -180,27 +186,27 @@ describe('FileUpload Component', () => {
   it('handles drag and drop events', () => {
     const onFileSelect = vi.fn()
     render(<FileUpload file={null} onFileSelect={onFileSelect} onClear={vi.fn()} />)
-    
+
     const dropzone = screen.getByText(/Drop your medical report here/i).closest('div.drop-zone')!
-    
+
     fireEvent.dragEnter(dropzone)
     expect(dropzone.className).toMatch(/active/)
-    
+
     fireEvent.dragLeave(dropzone)
     expect(dropzone.className).not.toMatch(/active/)
-    
+
     const file = new File(['x'], 'test.pdf', { type: 'application/pdf' })
     fireEvent.drop(dropzone, {
-      dataTransfer: { files: [file] }
+      dataTransfer: { files: [file] },
     })
-    
+
     expect(onFileSelect).toHaveBeenCalled()
   })
 
   it('handles dragover event without errors', () => {
     render(<FileUpload file={null} onFileSelect={vi.fn()} onClear={vi.fn()} />)
     const dropzone = screen.getByText(/Drop your medical report here/i).closest('div.drop-zone')!
-    
+
     // dragOver should prevent default without errors
     fireEvent.dragOver(dropzone)
   })
@@ -209,12 +215,12 @@ describe('FileUpload Component', () => {
     const onFileSelect = vi.fn()
     const smallFile = new File([new ArrayBuffer(500)], 'small.jpg', { type: 'image/jpeg' })
     render(<FileUpload file={null} onFileSelect={onFileSelect} onClear={vi.fn()} />)
-    
+
     const input = document.getElementById('file-upload-input') as HTMLInputElement
     if (input) {
       Object.defineProperty(input, 'files', { value: [smallFile] })
       fireEvent.change(input)
-      
+
       await waitFor(() => {
         expect(onFileSelect).toHaveBeenCalledWith(smallFile)
       })
@@ -223,14 +229,16 @@ describe('FileUpload Component', () => {
 
   it('passes PDF files directly without compression', async () => {
     const onFileSelect = vi.fn()
-    const pdfFile = new File([new ArrayBuffer(2 * 1024 * 1024)], 'big.pdf', { type: 'application/pdf' })
+    const pdfFile = new File([new ArrayBuffer(2 * 1024 * 1024)], 'big.pdf', {
+      type: 'application/pdf',
+    })
     render(<FileUpload file={null} onFileSelect={onFileSelect} onClear={vi.fn()} />)
-    
+
     const input = document.getElementById('file-upload-input') as HTMLInputElement
     if (input) {
       Object.defineProperty(input, 'files', { value: [pdfFile] })
       fireEvent.change(input)
-      
+
       await waitFor(() => {
         expect(onFileSelect).toHaveBeenCalledWith(pdfFile)
       })
@@ -241,17 +249,18 @@ describe('FileUpload Component', () => {
     const mockDrawImage = vi.fn()
     const mockToBlob = vi.fn((cb) => cb(new Blob(['compressed'])))
     // @ts-expect-error mocking getContext
-    HTMLCanvasElement.prototype.getContext = () => ({
-      drawImage: mockDrawImage,
-    }) as unknown as CanvasRenderingContext2D
+    HTMLCanvasElement.prototype.getContext = () =>
+      ({
+        drawImage: mockDrawImage,
+      }) as unknown as CanvasRenderingContext2D
     HTMLCanvasElement.prototype.toBlob = mockToBlob
 
     const originalImage = window.Image
     window.Image = class {
-      onload: () => void = () => {};
-      src: string = '';
-      width = 3000; // wide landscape
-      height = 1000;
+      onload: () => void = () => {}
+      src: string = ''
+      width = 3000 // wide landscape
+      height = 1000
       constructor() {
         setTimeout(() => this.onload(), 10)
       }
@@ -260,12 +269,12 @@ describe('FileUpload Component', () => {
     const onFileSelect = vi.fn()
     const file = new File([new ArrayBuffer(2 * 1024 * 1024)], 'wide.jpg', { type: 'image/jpeg' })
     render(<FileUpload file={null} onFileSelect={onFileSelect} onClear={vi.fn()} />)
-    
+
     const input = document.getElementById('file-upload-input') as HTMLInputElement
     if (input) {
       Object.defineProperty(input, 'files', { value: [file] })
       fireEvent.change(input)
-      
+
       await waitFor(() => {
         expect(mockDrawImage).toHaveBeenCalled()
         expect(onFileSelect).toHaveBeenCalled()
@@ -277,11 +286,11 @@ describe('FileUpload Component', () => {
   it('does not process unsupported file types on drop', () => {
     const onFileSelect = vi.fn()
     render(<FileUpload file={null} onFileSelect={onFileSelect} onClear={vi.fn()} />)
-    
+
     const dropzone = screen.getByText(/Drop your medical report here/i).closest('div.drop-zone')!
     const txtFile = new File(['x'], 'test.txt', { type: 'text/plain' })
     fireEvent.drop(dropzone, { dataTransfer: { files: [txtFile] } })
-    
+
     expect(onFileSelect).not.toHaveBeenCalled()
   })
 })
@@ -546,7 +555,7 @@ describe('UploadSection Component', () => {
         setLanguage={vi.fn()}
         handleAnalyze={vi.fn()}
         error={null}
-      />
+      />,
     )
     expect(screen.getByText('Analyze Your Report')).toBeInTheDocument()
     expect(screen.getByText(/Upload a medical report/)).toBeInTheDocument()
@@ -561,7 +570,7 @@ describe('UploadSection Component', () => {
         setLanguage={vi.fn()}
         handleAnalyze={vi.fn()}
         error={null}
-      />
+      />,
     )
     const btn = screen.getByText('Upload a file to continue')
     expect(btn).toBeInTheDocument()
@@ -577,7 +586,7 @@ describe('UploadSection Component', () => {
         setLanguage={vi.fn()}
         handleAnalyze={vi.fn()}
         error={null}
-      />
+      />,
     )
     const btn = screen.getByText('🔍 Analyze Report')
     expect(btn).toBeInTheDocument()
@@ -592,7 +601,7 @@ describe('UploadSection Component', () => {
         setLanguage={vi.fn()}
         handleAnalyze={vi.fn()}
         error="Something went wrong"
-      />
+      />,
     )
     const errorEl = screen.getByRole('alert')
     expect(errorEl).toBeInTheDocument()
@@ -608,7 +617,7 @@ describe('UploadSection Component', () => {
         setLanguage={vi.fn()}
         handleAnalyze={vi.fn()}
         error={null}
-      />
+      />,
     )
     const select = screen.getByLabelText('Explain in')
     expect(select).toBeInTheDocument()
@@ -628,7 +637,7 @@ describe('UploadSection Component', () => {
         setLanguage={vi.fn()}
         handleAnalyze={handleAnalyze}
         error={null}
-      />
+      />,
     )
     fireEvent.click(screen.getByText('🔍 Analyze Report'))
     expect(handleAnalyze).toHaveBeenCalledTimes(1)

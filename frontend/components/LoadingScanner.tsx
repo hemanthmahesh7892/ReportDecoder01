@@ -1,15 +1,15 @@
-"use client";
+'use client'
 
-import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
+import { useEffect, useState } from 'react'
+import { motion } from 'framer-motion'
 
 export default function LoadingScanner() {
-  const [randomWidths, setRandomWidths] = useState<number[]>([]);
+  const [randomWidths, setRandomWidths] = useState<number[]>([])
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setRandomWidths(Array.from({ length: 15 }).map(() => 60 + Math.random() * 25));
-  }, []);
+    setRandomWidths(Array.from({ length: 15 }).map(() => 60 + Math.random() * 25))
+  }, [])
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -33,8 +33,8 @@ export default function LoadingScanner() {
         {/* Scanning line */}
         <motion.div
           className="absolute left-0 right-0 h-0.5 bg-[var(--color-foreground)] shadow-sm"
-          animate={{ top: ["0%", "100%", "0%"] }}
-          transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+          animate={{ top: ['0%', '100%', '0%'] }}
+          transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
         />
         {/* Corner marks */}
         <div className="absolute top-2 left-2 w-4 h-4 border-t-2 border-l-2 border-[var(--color-foreground)] rounded-tl opacity-50" />
@@ -73,5 +73,5 @@ export default function LoadingScanner() {
         ))}
       </div>
     </motion.div>
-  );
+  )
 }

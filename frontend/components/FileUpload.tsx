@@ -1,131 +1,131 @@
-"use client";
+'use client'
 
-import { useCallback, useState, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useCallback, useState, useRef } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 
 interface FileUploadProps {
-  onFileSelect: (file: File) => void;
-  file: File | null;
-  onClear: () => void;
+  onFileSelect: (file: File) => void
+  file: File | null
+  onClear: () => void
 }
 
-const ACCEPTED = [
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-  "application/pdf",
-];
+const ACCEPTED = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf']
 
-export default function FileUpload({
-  onFileSelect,
-  file,
-  onClear,
-}: FileUploadProps) {
-  const [isDragging, setIsDragging] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
+export default function FileUpload({ onFileSelect, file, onClear }: FileUploadProps) {
+  const [isDragging, setIsDragging] = useState(false)
+  const inputRef = useRef<HTMLInputElement>(null)
 
   const handleDrag = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-  }, []);
+    e.preventDefault()
+    e.stopPropagation()
+  }, [])
 
   const handleDragIn = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(true);
-  }, []);
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(true)
+  }, [])
 
   const handleDragOut = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
-  }, []);
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(false)
+  }, [])
 
-  const processFile = useCallback(async (selected: File) => {
-    if (selected.size > 4 * 1024 * 1024) {
-        alert("File too large. Maximum size is 4MB.");
-        return;
-    }
-    
-    // If it's an image and larger than 1MB, compress it
-    if (selected.type.startsWith("image/") && selected.size > 1024 * 1024) {
-      try {
-        const img = new Image();
-        img.src = URL.createObjectURL(selected);
-        await new Promise((resolve) => { img.onload = resolve; });
-        
-        const canvas = document.createElement("canvas");
-        const ctx = canvas.getContext("2d");
-        
-        // Max dimension 1200
-        const MAX_WIDTH = 1200;
-        const MAX_HEIGHT = 1200;
-        let width = img.width;
-        let height = img.height;
-
-        if (width > height) {
-          if (width > MAX_WIDTH) {
-            height *= MAX_WIDTH / width;
-            width = MAX_WIDTH;
-          }
-        } else {
-          if (height > MAX_HEIGHT) {
-            width *= MAX_HEIGHT / height;
-            height = MAX_HEIGHT;
-          }
-        }
-        
-        canvas.width = width;
-        canvas.height = height;
-        ctx?.drawImage(img, 0, 0, width, height);
-        
-        canvas.toBlob((blob) => {
-          if (blob) {
-            const compressedFile = new File([blob], selected.name, {
-              type: "image/jpeg",
-              lastModified: Date.now(),
-            });
-            onFileSelect(compressedFile);
-          } else {
-            onFileSelect(selected);
-          }
-        }, "image/jpeg", 0.8);
-      } catch {
-        onFileSelect(selected);
+  const processFile = useCallback(
+    async (selected: File) => {
+      if (selected.size > 4 * 1024 * 1024) {
+        alert('File too large. Maximum size is 4MB.')
+        return
       }
-    } else {
-      onFileSelect(selected);
-    }
-  }, [onFileSelect]);
+
+      // If it's an image and larger than 1MB, compress it
+      if (selected.type.startsWith('image/') && selected.size > 1024 * 1024) {
+        try {
+          const img = new Image()
+          img.src = URL.createObjectURL(selected)
+          await new Promise((resolve) => {
+            img.onload = resolve
+          })
+
+          const canvas = document.createElement('canvas')
+          const ctx = canvas.getContext('2d')
+
+          // Max dimension 1200
+          const MAX_WIDTH = 1200
+          const MAX_HEIGHT = 1200
+          let width = img.width
+          let height = img.height
+
+          if (width > height) {
+            if (width > MAX_WIDTH) {
+              height *= MAX_WIDTH / width
+              width = MAX_WIDTH
+            }
+          } else {
+            if (height > MAX_HEIGHT) {
+              width *= MAX_HEIGHT / height
+              height = MAX_HEIGHT
+            }
+          }
+
+          canvas.width = width
+          canvas.height = height
+          ctx?.drawImage(img, 0, 0, width, height)
+
+          canvas.toBlob(
+            (blob) => {
+              if (blob) {
+                const compressedFile = new File([blob], selected.name, {
+                  type: 'image/jpeg',
+                  lastModified: Date.now(),
+                })
+                onFileSelect(compressedFile)
+              } else {
+                onFileSelect(selected)
+              }
+            },
+            'image/jpeg',
+            0.8,
+          )
+        } catch {
+          onFileSelect(selected)
+        }
+      } else {
+        onFileSelect(selected)
+      }
+    },
+    [onFileSelect],
+  )
 
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-      setIsDragging(false);
-      const droppedFile = e.dataTransfer.files[0];
+      e.preventDefault()
+      e.stopPropagation()
+      setIsDragging(false)
+      const droppedFile = e.dataTransfer.files[0]
       if (droppedFile && ACCEPTED.includes(droppedFile.type)) {
-        processFile(droppedFile);
+        processFile(droppedFile)
       }
     },
-    [processFile]
-  );
+    [processFile],
+  )
 
   const handleChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      const selected = e.target.files?.[0];
+      const selected = e.target.files?.[0]
       if (selected && ACCEPTED.includes(selected.type)) {
-          processFile(selected);
+        processFile(selected)
       }
     },
-    [processFile]
-  );
+    [processFile],
+  )
 
   const formatSize = (bytes: number) => {
-    if (bytes < 1024) return `${bytes} B`;
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-  };
+    if (bytes < 1024) return `${bytes} B`
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+  }
 
   return (
     <div className="w-full">
@@ -137,7 +137,7 @@ export default function FileUpload({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             className={`drop-zone relative rounded-2xl p-10 md:p-14 text-center cursor-pointer transition-all duration-300 ${
-              isDragging ? "active" : ""
+              isDragging ? 'active' : ''
             }`}
             onDragEnter={handleDragIn}
             onDragLeave={handleDragOut}
@@ -207,9 +207,7 @@ export default function FileUpload({
                 <p className="font-medium text-sm truncate max-w-[200px] md:max-w-[300px]">
                   {file.name}
                 </p>
-                <p className="text-xs text-[var(--color-muted)]">
-                  {formatSize(file.size)}
-                </p>
+                <p className="text-xs text-[var(--color-muted)]">{formatSize(file.size)}</p>
               </div>
             </div>
             <button
@@ -225,16 +223,12 @@ export default function FileUpload({
                 stroke="currentColor"
                 strokeWidth={1.5}
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M6 18L18 6M6 6l12 12"
-                />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
           </motion.div>
         )}
       </AnimatePresence>
     </div>
-  );
+  )
 }

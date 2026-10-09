@@ -8,18 +8,18 @@ afterEach(() => {
 
 // Mock Web Speech API for JSDOM
 class MockSpeechSynthesisUtterance {
-  text: string;
-  rate: number;
-  onend: (() => void) | null;
-  onerror: (() => void) | null;
+  text: string
+  rate: number
+  onend: (() => void) | null
+  onerror: (() => void) | null
   constructor(text: string) {
-    this.text = text;
-    this.rate = 1;
-    this.onend = null;
-    this.onerror = null;
+    this.text = text
+    this.rate = 1
+    this.onend = null
+    this.onerror = null
   }
 }
 Object.defineProperty(window, 'SpeechSynthesisUtterance', {
   value: MockSpeechSynthesisUtterance,
-  writable: true
-});
+  writable: true,
+})
