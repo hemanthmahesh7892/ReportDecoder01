@@ -6,7 +6,9 @@ patient-friendly explanations via the Gemini API.
 
 import logging
 
-from fastapi import FastAPI, Request
+from typing import Awaitable, Callable
+
+from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from slowapi import Limiter, _rate_limit_exceeded_handler
@@ -65,7 +67,8 @@ app.add_middleware(
 )
 
 @app.middleware("http")
-async def add_security_headers(request: Request, call_next):
+async def add_security_headers(request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
+    """Add security headers to every response."""
     response = await call_next(request)
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["X-Frame-Options"] = "DENY"

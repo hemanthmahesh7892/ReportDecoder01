@@ -11,12 +11,12 @@ import pytest
 from fastapi.testclient import TestClient
 from pydantic import ValidationError
 
+from config import ALLOWED_LANGUAGES, ALLOWED_MIME, MAX_SIZE
 from gemini_client import reset_client
 from main import app, limiter
-from config import ALLOWED_LANGUAGES, ALLOWED_MIME, MAX_SIZE
+from models import AnalysisResponse, LabValue, Medicine
 from routes import _build_prompt
 from validation import sanitize_language
-from models import AnalysisResponse, LabValue, Medicine
 
 # Disable rate limiting for all tests
 limiter.enabled = False

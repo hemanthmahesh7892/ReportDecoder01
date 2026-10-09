@@ -1,11 +1,14 @@
 import logging
+
 import fitz
 from fastapi import HTTPException, UploadFile
+
 from config import ALLOWED_LANGUAGES, ALLOWED_MIME, MAX_SIZE
 
 logger = logging.getLogger(__name__)
 
 def sanitize_language(language: str) -> str:
+    """Sanitize and validate the requested target language."""
     cleaned = language.strip()
     if cleaned in ALLOWED_LANGUAGES:
         return cleaned
@@ -13,6 +16,7 @@ def sanitize_language(language: str) -> str:
     return "English"
 
 def validate_file(file: UploadFile, file_bytes: bytes) -> None:
+    """Validate uploaded file size, type, and magic bytes for security."""
     if len(file_bytes) > MAX_SIZE:
         logger.warning("Rejected file upload: file exceeds %d bytes", MAX_SIZE)
         raise HTTPException(
@@ -36,7 +40,7 @@ def validate_file(file: UploadFile, file_bytes: bytes) -> None:
     if mime not in ALLOWED_MIME or (file.content_type and file.content_type not in ALLOWED_MIME):
         raise HTTPException(
             status_code=400,
-            detail=f"Unsupported file type. Must be PDF, JPEG, PNG, or WEBP.",
+            detail="Unsupported file type. Must be PDF, JPEG, PNG, or WEBP.",
         )
 
     # Cap PDF page count
@@ -47,7 +51,7 @@ def validate_file(file: UploadFile, file_bytes: bytes) -> None:
                 logger.warning("Rejected PDF upload: too many pages (%d)", len(doc))
                 raise HTTPException(status_code=400, detail="PDF has too many pages. Maximum allowed is 10.")
             doc.close()
-        except Exception:
+        except Exception as e:
             logger.warning("Rejected PDF upload: could not parse PDF")
-            raise HTTPException(status_code=400, detail="Invalid or corrupt PDF file.")
+            raise HTTPException(status_code=400, detail="Invalid or corrupt PDF file.") from e
 

@@ -1,13 +1,12 @@
 import asyncio
 import json
 import logging
-from typing import Any, Union
+from typing import Any
 
 import fitz
 from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
-from config import (
-    MAX_PDF_PAGES, MAX_RETRIES, PDF_RENDER_ZOOM, RETRY_DELAY_SECONDS
-)
+
+from config import MAX_PDF_PAGES, MAX_RETRIES, PDF_RENDER_ZOOM, RETRY_DELAY_SECONDS
 from gemini_client import get_model
 from models import AnalysisResponse
 from validation import sanitize_language, validate_file
@@ -38,10 +37,10 @@ Extract and explain the following:
 Return a valid JSON object matching this schema exactly:
 {json.dumps(AnalysisResponse.model_json_schema(), indent=2)}"""
 
-def _render_pdf_to_images(file_bytes: bytes) -> list[dict[str, Union[str, bytes]]]:
+def _render_pdf_to_images(file_bytes: bytes) -> list[dict[str, str | bytes]]:
     try:
         doc = fitz.open("pdf", file_bytes)
-        images: list[dict[str, Union[str, bytes]]] = []
+        images: list[dict[str, str | bytes]] = []
         for page_num in range(min(MAX_PDF_PAGES, len(doc))):
             page = doc.load_page(page_num)
             pix = page.get_pixmap(matrix=fitz.Matrix(PDF_RENDER_ZOOM, PDF_RENDER_ZOOM))
@@ -57,19 +56,21 @@ def _render_pdf_to_images(file_bytes: bytes) -> list[dict[str, Union[str, bytes]
 
 @router.get("/health")
 async def health_check() -> dict[str, str]:
+    """Check the health status of the backend API."""
     return {"status": "ok"}
 
 @router.post("/analyze", response_model=AnalysisResponse)
 async def analyze_report(
     request: Request,
-    file: UploadFile = File(...),
+    file: UploadFile = File(...),  # noqa: B008
     language: str = Form(default="English"),
 ) -> AnalysisResponse:
+    """Analyze an uploaded medical report and return a structured response."""
     file_bytes = await file.read()
     validate_file(file, file_bytes)
     safe_language: str = sanitize_language(language)
     prompt: str = _build_prompt(safe_language)
-    content_parts: list[Union[str, dict[str, Union[str, bytes]]]] = [prompt]
+    content_parts: list[str | dict[str, str | bytes]] = [prompt]
 
     if file.content_type == "application/pdf":
         content_parts.extend(_render_pdf_to_images(file_bytes))
