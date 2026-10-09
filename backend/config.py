@@ -9,7 +9,7 @@ GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
 REDIS_URL = os.getenv("REDIS_URL", "")
 
 # Upload constraints
-MAX_SIZE = int(os.getenv("MAX_SIZE", str(4 * 1024 * 1024)))  # 4 MB
+MAX_SIZE = int(os.getenv("MAX_SIZE", str(10 * 1024 * 1024)))  # 10 MB
 MAX_PDF_PAGES = int(os.getenv("MAX_PDF_PAGES", "3"))
 
 # Validations

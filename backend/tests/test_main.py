@@ -480,8 +480,8 @@ class TestConstants:
         assert "application/pdf" in ALLOWED_MIME
         assert "text/plain" not in ALLOWED_MIME
 
-    def test_max_size_is_4mb(self) -> None:
-        assert MAX_SIZE == 4 * 1024 * 1024
+    def test_max_size_is_10mb(self) -> None:
+        assert MAX_SIZE == 10 * 1024 * 1024
 
     def test_allowed_languages_match_frontend(self) -> None:
         expected = {"English", "Hindi", "Kannada", "Tamil", "Telugu", "Malayalam", "Marathi", "Bengali"}

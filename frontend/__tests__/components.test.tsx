@@ -14,7 +14,7 @@ describe('FileUpload Component', () => {
   it('renders the drop zone when no file is selected', () => {
     render(<FileUpload file={null} onFileSelect={vi.fn()} onClear={vi.fn()} />)
     expect(screen.getByText(/Drop your medical report/i)).toBeInTheDocument()
-    expect(screen.getByText(/JPG, PNG, WEBP, PDF up to 4 MB/i)).toBeInTheDocument()
+    expect(screen.getByText(/JPG, PNG, WEBP, PDF up to 10 MB/i)).toBeInTheDocument()
   })
 
   it('shows file preview when a file is selected', () => {
@@ -52,7 +52,7 @@ describe('FileUpload Component', () => {
     expect(onClear).toHaveBeenCalledTimes(1)
   })
 
-  it('rejects files over 4 MB via alert', async () => {
+  it('rejects files over 10 MB via alert', async () => {
     const alertMock = vi.spyOn(window, 'alert').mockImplementation(() => {})
     const onFileSelect = vi.fn()
     render(<FileUpload file={null} onFileSelect={onFileSelect} onClear={vi.fn()} />)
@@ -60,14 +60,14 @@ describe('FileUpload Component', () => {
     const input = document.getElementById('file-upload-input') as HTMLInputElement
 
     if (input) {
-      const oversized = new File([new ArrayBuffer(5 * 1024 * 1024)], 'huge.png', {
+      const oversized = new File([new ArrayBuffer(11 * 1024 * 1024)], 'huge.png', {
         type: 'image/png',
       })
       Object.defineProperty(input, 'files', { value: [oversized] })
       fireEvent.change(input)
       // processFile is async, give it a tick
       await waitFor(() => {
-        expect(alertMock).toHaveBeenCalledWith('File too large. Maximum size is 4MB.')
+        expect(alertMock).toHaveBeenCalledWith('File too large. Maximum size is 10MB.')
       })
     }
     alertMock.mockRestore()
