@@ -7,6 +7,7 @@ patient-friendly explanations via the Gemini API.
 import asyncio
 import json
 import logging
+from typing import Union
 
 import fitz  # PyMuPDF
 import google.generativeai as genai
@@ -153,7 +154,7 @@ Return a valid JSON object matching this schema exactly:
 {json.dumps(AnalysisResponse.model_json_schema(), indent=2)}"""
 
 
-def _render_pdf_to_images(file_bytes: bytes) -> list[dict[str, str | bytes]]:
+def _render_pdf_to_images(file_bytes: bytes) -> list[dict[str, Union[str, bytes]]]:
     """Render a PDF's pages into PNG image blobs for the AI model.
 
     Args:
@@ -169,7 +170,7 @@ def _render_pdf_to_images(file_bytes: bytes) -> list[dict[str, str | bytes]]:
     """
     try:
         doc = fitz.open("pdf", file_bytes)
-        images: list[dict[str, str | bytes]] = []
+        images: list[dict[str, Union[str, bytes]]] = []
         for page_num in range(min(MAX_PDF_PAGES, len(doc))):
             page = doc.load_page(page_num)
             pix = page.get_pixmap(matrix=fitz.Matrix(PDF_RENDER_ZOOM, PDF_RENDER_ZOOM))
@@ -244,7 +245,7 @@ async def analyze(
 
     # --- build prompt ---
     prompt: str = _build_prompt(safe_language)
-    content_parts: list[str | dict[str, str | bytes]] = [prompt]
+    content_parts: list[Union[str, dict[str, Union[str, bytes]]]] = [prompt]
 
     # --- Process file into images ---
     if file.content_type == "application/pdf":

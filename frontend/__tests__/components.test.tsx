@@ -147,7 +147,7 @@ describe('FileUpload Component', () => {
   })
 
   it('falls back to original file when compression throws an error', async () => {
-    // @ts-expect-error mocking getContext to throw
+    // Mocking getContext to throw
     HTMLCanvasElement.prototype.getContext = () => { throw new Error('canvas fail') }
 
     const originalImage = window.Image
