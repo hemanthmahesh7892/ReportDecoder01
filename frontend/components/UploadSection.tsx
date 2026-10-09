@@ -63,7 +63,7 @@ export default function UploadSection({
       <motion.button
         onClick={() => handleAnalyze()}
         disabled={!file}
-        className={`w-full py-4 rounded-lg font-medium transition-all ${
+        className={`w-full py-4 rounded-lg font-medium transition-all focus:outline-none focus:ring-2 focus:ring-[var(--color-foreground)] ${
           file
             ? 'btn-primary w-full cursor-pointer'
             : 'btn-primary w-full opacity-50 cursor-not-allowed'

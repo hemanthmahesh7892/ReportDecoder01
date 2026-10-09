@@ -42,7 +42,7 @@ function CopyButton({ text }: { text: string }) {
   return (
     <button
       onClick={copy}
-      className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-foreground)] hover:bg-[var(--color-surface-alt)] transition-colors"
+      className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-foreground)] hover:bg-[var(--color-surface-alt)] transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--color-foreground)]"
       id="copy-summary-btn"
     >
       {copied ? (
@@ -102,7 +102,7 @@ function ReadAloudButton({ text }: { text: string }) {
   return (
     <button
       onClick={toggle}
-      className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg border transition-colors ${
+      className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg border transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--color-foreground)] ${
         speaking
           ? 'border-[var(--color-foreground)] bg-[var(--color-foreground)] text-[var(--color-background)]'
           : 'border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-foreground)] hover:bg-[var(--color-surface-alt)]'

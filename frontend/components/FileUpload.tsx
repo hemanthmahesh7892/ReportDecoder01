@@ -212,16 +212,18 @@ export default function FileUpload({ onFileSelect, file, onClear }: FileUploadPr
             </div>
             <button
               onClick={onClear}
-              className="text-[var(--color-muted)] hover:text-[var(--color-foreground)] transition-colors p-2"
+              className="text-[var(--color-muted)] hover:text-[var(--color-foreground)] transition-colors p-2 focus:outline-none focus:ring-2 focus:ring-[var(--color-foreground)] rounded-md"
               aria-label="Remove file"
               id="clear-file-btn"
             >
+              <span className="sr-only">Remove file</span>
               <svg
                 className="w-5 h-5"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
                 strokeWidth={1.5}
+                aria-hidden="true"
               >
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
               </svg>
