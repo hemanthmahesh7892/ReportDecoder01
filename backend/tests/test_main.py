@@ -12,15 +12,10 @@ from fastapi.testclient import TestClient
 from pydantic import ValidationError
 
 from gemini_client import reset_client
-from main import (
-    ALLOWED_LANGUAGES,
-    ALLOWED_MIME,
-    MAX_SIZE,
-    _build_prompt,
-    _sanitize_language,
-    app,
-    limiter,
-)
+from main import app, limiter
+from config import ALLOWED_LANGUAGES, ALLOWED_MIME, MAX_SIZE
+from routes import _build_prompt
+from validation import sanitize_language
 from models import AnalysisResponse, LabValue, Medicine
 
 # Disable rate limiting for all tests
@@ -149,22 +144,22 @@ class TestFileValidation:
 # ---------------------------------------------------------------------------
 
 class TestLanguageSanitization:
-    """Tests for the _sanitize_language helper."""
+    """Tests for the sanitize_language helper."""
 
     def test_allowed_language_passes(self) -> None:
         for lang in ALLOWED_LANGUAGES:
-            assert _sanitize_language(lang) == lang
+            assert sanitize_language(lang) == lang
 
     def test_unknown_language_defaults_to_english(self) -> None:
-        assert _sanitize_language("FakeLanguage") == "English"
+        assert sanitize_language("FakeLanguage") == "English"
 
     def test_injection_attempt_defaults_to_english(self) -> None:
-        assert _sanitize_language("'; DROP TABLE users; --") == "English"
+        assert sanitize_language("'; DROP TABLE users; --") == "English"
 
     def test_whitespace_is_stripped(self) -> None:
-        assert _sanitize_language("  Hindi  ") == "Hindi"
+        assert sanitize_language("  Hindi  ") == "Hindi"
 
-    @patch("main.get_model")
+    @patch("routes.get_model")
     def test_malicious_language_does_not_reach_prompt(self, mock_get_model: MagicMock) -> None:
         mock_model = MagicMock()
         mock_model.generate_content.return_value = (
@@ -209,7 +204,7 @@ class TestBuildPrompt:
 class TestAnalyzeSuccess:
     """Tests for a successful POST /analyze round-trip (Gemini mocked)."""
 
-    @patch("main.get_model")
+    @patch("routes.get_model")
     def test_image_upload_returns_valid_response(self, mock_get_model: MagicMock) -> None:
         mock_model = MagicMock()
         mock_model.generate_content.return_value = (
@@ -228,7 +223,7 @@ class TestAnalyzeSuccess:
         assert len(body["lab_values"]) == 1
         assert body["lab_values"][0]["status"] == "normal"
 
-    @patch("main.get_model")
+    @patch("routes.get_model")
     def test_pdf_upload_returns_valid_response(self, mock_get_model: MagicMock) -> None:
         mock_model = MagicMock()
         mock_model.generate_content.return_value = (
@@ -245,7 +240,7 @@ class TestAnalyzeSuccess:
         body = resp.json()
         assert body["summary"] == "Normal blood work results"
 
-    @patch("main.get_model")
+    @patch("routes.get_model")
     def test_prescription_analysis(self, mock_get_model: MagicMock) -> None:
         mock_model = MagicMock()
         mock_model.generate_content.return_value = (
@@ -272,7 +267,7 @@ class TestAnalyzeSuccess:
 class TestLanguageSelection:
     """Verify that the chosen language is forwarded to the prompt."""
 
-    @patch("main.get_model")
+    @patch("routes.get_model")
     def test_language_forwarded_to_prompt(self, mock_get_model: MagicMock) -> None:
         mock_model = MagicMock()
         mock_model.generate_content.return_value = (
@@ -289,7 +284,7 @@ class TestLanguageSelection:
         prompt_text = call_args.args[0][0]
         assert "Tamil" in prompt_text
 
-    @patch("main.get_model")
+    @patch("routes.get_model")
     def test_default_language_is_english(self, mock_get_model: MagicMock) -> None:
         mock_model = MagicMock()
         mock_model.generate_content.return_value = (
@@ -313,7 +308,7 @@ class TestLanguageSelection:
 class TestErrorHandling:
     """Tests for Gemini failures and malformed responses."""
 
-    @patch("main.get_model")
+    @patch("routes.get_model")
     def test_gemini_timeout_returns_502(self, mock_get_model: MagicMock) -> None:
         mock_model = MagicMock()
         mock_model.generate_content.side_effect = TimeoutError("timed out")
@@ -327,7 +322,7 @@ class TestErrorHandling:
         assert resp.status_code == 502
         assert "Gemini API error" in resp.json()["detail"]
 
-    @patch("main.get_model")
+    @patch("routes.get_model")
     def test_gemini_generic_error_returns_502(self, mock_get_model: MagicMock) -> None:
         mock_model = MagicMock()
         mock_model.generate_content.side_effect = RuntimeError("API down")
@@ -340,7 +335,7 @@ class TestErrorHandling:
         )
         assert resp.status_code == 502
 
-    @patch("main.get_model")
+    @patch("routes.get_model")
     def test_malformed_ai_response_returns_502(self, mock_get_model: MagicMock) -> None:
         mock_model = MagicMock()
         mock_model.generate_content.return_value = (
