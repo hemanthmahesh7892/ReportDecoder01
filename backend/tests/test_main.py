@@ -122,7 +122,7 @@ class TestFileValidation:
             data={"language": "English"},
         )
         assert resp.status_code == 400
-        assert "Unsupported file type" in resp.json()["detail"]
+        assert "Spoofed file type detected" in resp.json()["detail"]
 
     def test_reject_oversize_file(self) -> None:
         big = b"x" * (MAX_SIZE + 1)

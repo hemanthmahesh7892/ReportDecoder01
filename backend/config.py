@@ -6,6 +6,7 @@ load_dotenv()
 # Environment settings
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+REDIS_URL = os.getenv("REDIS_URL", "")
 
 # Upload constraints
 MAX_SIZE = int(os.getenv("MAX_SIZE", str(4 * 1024 * 1024)))  # 4 MB

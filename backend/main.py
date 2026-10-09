@@ -13,7 +13,7 @@ from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
 
-from config import CORS_ORIGIN
+from config import CORS_ORIGIN, REDIS_URL
 from routes import router
 
 # ---------------------------------------------------------------------------
@@ -30,7 +30,13 @@ logger = logging.getLogger(__name__)
 # App setup
 # ---------------------------------------------------------------------------
 
-limiter = Limiter(key_func=get_remote_address)
+if REDIS_URL:
+    limiter = Limiter(key_func=get_remote_address, storage_uri=REDIS_URL)
+    logger.info("Configured rate limiting with Redis.")
+else:
+    limiter = Limiter(key_func=get_remote_address)
+    logger.info("Configured rate limiting with in-memory storage (local fallback).")
+
 app = FastAPI(
     title="Report Decoder API",
     version="1.0.0",
@@ -57,6 +63,16 @@ app.add_middleware(
     allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
 )
+
+@app.middleware("http")
+async def add_security_headers(request: Request, call_next):
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Content-Security-Policy"] = "default-src 'self'; frame-ancestors 'none';"
+    return response
 
 app.include_router(router)
 

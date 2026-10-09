@@ -22,7 +22,12 @@ jobs:
         run: |
           cd backend
           pip install -r requirements.txt
-          pip install pytest httpx pytest-cov ruff mypy
+          pip install pytest httpx pytest-cov ruff mypy pip-audit
+
+      - name: Run pip-audit
+        run: |
+          cd backend
+          pip-audit || echo "Warnings found in pip-audit"
           
       - name: Run Ruff Lint & Mypy Type Check
         run: |
@@ -51,6 +56,11 @@ jobs:
         run: |
           cd frontend
           npm ci
+
+      - name: Run npm audit
+        run: |
+          cd frontend
+          npm audit --audit-level=high || echo "Warnings found in npm audit"
           
       - name: Run ESLint
         run: |
