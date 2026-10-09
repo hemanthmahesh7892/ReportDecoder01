@@ -22,7 +22,6 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  /* Dark mode inversion (optional for now, but user requested a default light with dark toggle, let's setup variables) */
   :root {
     --color-background: #0A0A0A;
     --color-foreground: #FFFFFF;
@@ -48,6 +47,30 @@ body {
   color: var(--color-foreground);
   font-family: var(--font-sans), system-ui, -apple-system;
   min-height: 100vh;
+}
+
+/* ------------------------------------------------------------------ */
+/* Skip-to-content link (accessibility)                               */
+/* ------------------------------------------------------------------ */
+.skip-link {
+  position: absolute;
+  top: -100%;
+  left: 16px;
+  z-index: 9999;
+  padding: 8px 16px;
+  background: var(--color-foreground);
+  color: var(--color-background);
+  font-weight: 600;
+  font-size: 0.875rem;
+  border-radius: 0 0 8px 8px;
+  text-decoration: none;
+  transition: top 0.2s ease;
+}
+
+.skip-link:focus {
+  top: 0;
+  outline: 2px solid var(--color-foreground);
+  outline-offset: 2px;
 }
 
 /* Scrollbar */
@@ -149,4 +172,17 @@ body {
   html {
     scroll-behavior: auto;
   }
+}
+
+/* Visually hidden utility for screen readers */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
 }

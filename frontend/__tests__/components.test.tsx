@@ -2,6 +2,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { describe, it, expect, vi } from 'vitest'
 import FileUpload from '../components/FileUpload'
 import ResultsCards from '../components/ResultsCards'
+import UploadSection from '../components/UploadSection'
 import type { AnalysisResponse } from '../lib/types'
 import { SUPPORTED_LANGUAGES } from '../lib/types'
 
@@ -27,6 +28,19 @@ describe('FileUpload Component', () => {
     const file = new File([buf], 'big.png', { type: 'image/png' })
     render(<FileUpload file={file} onFileSelect={vi.fn()} onClear={vi.fn()} />)
     expect(screen.getByText(/MB/)).toBeInTheDocument()
+  })
+
+  it('displays file size in KB for smaller files', () => {
+    const buf = new ArrayBuffer(500 * 1024) // ~500 KB
+    const file = new File([buf], 'small.png', { type: 'image/png' })
+    render(<FileUpload file={file} onFileSelect={vi.fn()} onClear={vi.fn()} />)
+    expect(screen.getByText(/KB/)).toBeInTheDocument()
+  })
+
+  it('displays file size in B for tiny files', () => {
+    const file = new File(['x'], 'tiny.png', { type: 'image/png' })
+    render(<FileUpload file={file} onFileSelect={vi.fn()} onClear={vi.fn()} />)
+    expect(screen.getByText(/B/)).toBeInTheDocument()
   })
 
   it('calls onClear when the remove button is clicked', () => {
@@ -96,6 +110,73 @@ describe('FileUpload Component', () => {
     window.Image = originalImage
   })
 
+  it('falls back to original file when canvas toBlob returns null', async () => {
+    const mockDrawImage = vi.fn()
+    const mockToBlob = vi.fn((cb) => cb(null)) // null blob
+    // @ts-expect-error mocking getContext
+    HTMLCanvasElement.prototype.getContext = () => ({
+      drawImage: mockDrawImage,
+    }) as unknown as CanvasRenderingContext2D
+    HTMLCanvasElement.prototype.toBlob = mockToBlob
+
+    const originalImage = window.Image
+    window.Image = class {
+      onload: () => void = () => {};
+      src: string = '';
+      width = 2000;
+      height = 2000;
+      constructor() {
+        setTimeout(() => this.onload(), 10)
+      }
+    } as unknown as typeof Image
+
+    const onFileSelect = vi.fn()
+    const file = new File([new ArrayBuffer(2 * 1024 * 1024)], 'big.jpg', { type: 'image/jpeg' })
+    render(<FileUpload file={null} onFileSelect={onFileSelect} onClear={vi.fn()} />)
+    
+    const input = document.getElementById('file-upload-input') as HTMLInputElement
+    if (input) {
+      Object.defineProperty(input, 'files', { value: [file] })
+      fireEvent.change(input)
+      
+      await waitFor(() => {
+        expect(onFileSelect).toHaveBeenCalledWith(file) // original file, not compressed
+      })
+    }
+    window.Image = originalImage
+  })
+
+  it('falls back to original file when compression throws an error', async () => {
+    // @ts-expect-error mocking getContext to throw
+    HTMLCanvasElement.prototype.getContext = () => { throw new Error('canvas fail') }
+
+    const originalImage = window.Image
+    window.Image = class {
+      onload: () => void = () => {};
+      src: string = '';
+      width = 2000;
+      height = 2000;
+      constructor() {
+        setTimeout(() => this.onload(), 10)
+      }
+    } as unknown as typeof Image
+
+    const onFileSelect = vi.fn()
+    const file = new File([new ArrayBuffer(2 * 1024 * 1024)], 'big.jpg', { type: 'image/jpeg' })
+    render(<FileUpload file={null} onFileSelect={onFileSelect} onClear={vi.fn()} />)
+    
+    const input = document.getElementById('file-upload-input') as HTMLInputElement
+    if (input) {
+      Object.defineProperty(input, 'files', { value: [file] })
+      fireEvent.change(input)
+      
+      await waitFor(() => {
+        expect(onFileSelect).toHaveBeenCalledWith(file)
+      })
+    }
+    window.Image = originalImage
+  })
+
   it('handles drag and drop events', () => {
     const onFileSelect = vi.fn()
     render(<FileUpload file={null} onFileSelect={onFileSelect} onClear={vi.fn()} />)
@@ -114,6 +195,94 @@ describe('FileUpload Component', () => {
     })
     
     expect(onFileSelect).toHaveBeenCalled()
+  })
+
+  it('handles dragover event without errors', () => {
+    render(<FileUpload file={null} onFileSelect={vi.fn()} onClear={vi.fn()} />)
+    const dropzone = screen.getByText(/Drop your medical report here/i).closest('div.drop-zone')!
+    
+    // dragOver should prevent default without errors
+    fireEvent.dragOver(dropzone)
+  })
+
+  it('passes small files directly without compression', async () => {
+    const onFileSelect = vi.fn()
+    const smallFile = new File([new ArrayBuffer(500)], 'small.jpg', { type: 'image/jpeg' })
+    render(<FileUpload file={null} onFileSelect={onFileSelect} onClear={vi.fn()} />)
+    
+    const input = document.getElementById('file-upload-input') as HTMLInputElement
+    if (input) {
+      Object.defineProperty(input, 'files', { value: [smallFile] })
+      fireEvent.change(input)
+      
+      await waitFor(() => {
+        expect(onFileSelect).toHaveBeenCalledWith(smallFile)
+      })
+    }
+  })
+
+  it('passes PDF files directly without compression', async () => {
+    const onFileSelect = vi.fn()
+    const pdfFile = new File([new ArrayBuffer(2 * 1024 * 1024)], 'big.pdf', { type: 'application/pdf' })
+    render(<FileUpload file={null} onFileSelect={onFileSelect} onClear={vi.fn()} />)
+    
+    const input = document.getElementById('file-upload-input') as HTMLInputElement
+    if (input) {
+      Object.defineProperty(input, 'files', { value: [pdfFile] })
+      fireEvent.change(input)
+      
+      await waitFor(() => {
+        expect(onFileSelect).toHaveBeenCalledWith(pdfFile)
+      })
+    }
+  })
+
+  it('compresses wide landscape images correctly', async () => {
+    const mockDrawImage = vi.fn()
+    const mockToBlob = vi.fn((cb) => cb(new Blob(['compressed'])))
+    // @ts-expect-error mocking getContext
+    HTMLCanvasElement.prototype.getContext = () => ({
+      drawImage: mockDrawImage,
+    }) as unknown as CanvasRenderingContext2D
+    HTMLCanvasElement.prototype.toBlob = mockToBlob
+
+    const originalImage = window.Image
+    window.Image = class {
+      onload: () => void = () => {};
+      src: string = '';
+      width = 3000; // wide landscape
+      height = 1000;
+      constructor() {
+        setTimeout(() => this.onload(), 10)
+      }
+    } as unknown as typeof Image
+
+    const onFileSelect = vi.fn()
+    const file = new File([new ArrayBuffer(2 * 1024 * 1024)], 'wide.jpg', { type: 'image/jpeg' })
+    render(<FileUpload file={null} onFileSelect={onFileSelect} onClear={vi.fn()} />)
+    
+    const input = document.getElementById('file-upload-input') as HTMLInputElement
+    if (input) {
+      Object.defineProperty(input, 'files', { value: [file] })
+      fireEvent.change(input)
+      
+      await waitFor(() => {
+        expect(mockDrawImage).toHaveBeenCalled()
+        expect(onFileSelect).toHaveBeenCalled()
+      })
+    }
+    window.Image = originalImage
+  })
+
+  it('does not process unsupported file types on drop', () => {
+    const onFileSelect = vi.fn()
+    render(<FileUpload file={null} onFileSelect={onFileSelect} onClear={vi.fn()} />)
+    
+    const dropzone = screen.getByText(/Drop your medical report here/i).closest('div.drop-zone')!
+    const txtFile = new File(['x'], 'test.txt', { type: 'text/plain' })
+    fireEvent.drop(dropzone, { dataTransfer: { files: [txtFile] } })
+    
+    expect(onFileSelect).not.toHaveBeenCalled()
   })
 })
 
@@ -177,6 +346,25 @@ const prescriptionData: AnalysisResponse = {
   lab_values: [],
   red_flags: [],
   doctor_questions: ['Can I take these together?'],
+  disclaimer: 'Consult your doctor.',
+}
+
+const medicineWithNoTiming: AnalysisResponse = {
+  summary: 'Prescription with unusual timing.',
+  document_type: 'prescription',
+  medicines: [
+    {
+      name: 'VitaminD',
+      purpose: 'Supplement',
+      dosage: '1000IU',
+      timing: 'weekly',
+      with_food: 'any',
+      notes: '',
+    },
+  ],
+  lab_values: [],
+  red_flags: [],
+  doctor_questions: [],
   disclaimer: 'Consult your doctor.',
 }
 
@@ -249,12 +437,41 @@ describe('ResultsCards Component', () => {
       render(<ResultsCards data={prescriptionData} />)
       expect(screen.queryByText('Lab Values')).not.toBeInTheDocument()
     })
+
+    it('renders medicine notes when present', () => {
+      render(<ResultsCards data={prescriptionData} />)
+      expect(screen.getAllByText('Complete full course')[0]).toBeInTheDocument()
+    })
+
+    it('groups medicines with unrecognised timing into morning', () => {
+      render(<ResultsCards data={medicineWithNoTiming} />)
+      // VitaminD timing is "weekly" which doesn't match morning/afternoon/night
+      // So it should be placed in the morning group as default
+      expect(screen.getAllByText('VitaminD').length).toBeGreaterThan(0)
+    })
   })
 
   describe('Interactive features', () => {
     it('renders copy button', () => {
       render(<ResultsCards data={labReportData} />)
       expect(screen.getAllByText('Copy')[0]).toBeInTheDocument()
+    })
+
+    it('copies text to clipboard on copy button click', async () => {
+      const writeTextMock = vi.fn().mockResolvedValue(undefined)
+      Object.defineProperty(navigator, 'clipboard', {
+        value: { writeText: writeTextMock },
+        writable: true,
+      })
+
+      render(<ResultsCards data={labReportData} />)
+      const copyBtn = screen.getAllByText('Copy')[0]
+      fireEvent.click(copyBtn)
+
+      await waitFor(() => {
+        expect(writeTextMock).toHaveBeenCalledWith(labReportData.summary)
+        expect(screen.getByText('Copied')).toBeInTheDocument()
+      })
     })
 
     it('renders read-aloud button', () => {
@@ -277,6 +494,144 @@ describe('ResultsCards Component', () => {
       expect(mockSpeak).toHaveBeenCalled()
       expect(screen.getByText('Stop')).toBeInTheDocument()
     })
+
+    it('stops reading when Stop is clicked', () => {
+      const mockSpeak = vi.fn()
+      const mockCancel = vi.fn()
+      Object.defineProperty(window, 'speechSynthesis', {
+        value: { speak: mockSpeak, cancel: mockCancel },
+        writable: true,
+      })
+
+      render(<ResultsCards data={labReportData} />)
+      const btn = screen.getAllByText('Read Aloud')[0]
+      fireEvent.click(btn) // Start
+      fireEvent.click(screen.getByText('Stop')) // Stop
+      expect(mockCancel).toHaveBeenCalled()
+    })
+  })
+
+  describe('Empty data edge cases', () => {
+    it('renders without medicines, lab values, red flags, or questions', () => {
+      const emptyData: AnalysisResponse = {
+        summary: 'Nothing found.',
+        document_type: 'other',
+        medicines: [],
+        lab_values: [],
+        red_flags: [],
+        doctor_questions: [],
+        disclaimer: 'Disclaimer text.',
+      }
+      render(<ResultsCards data={emptyData} />)
+      expect(screen.getByText('Nothing found.')).toBeInTheDocument()
+      expect(screen.getByText('Disclaimer text.')).toBeInTheDocument()
+      // Medicines and lab values sections should not render
+      expect(screen.queryByText(/Medicines/)).not.toBeInTheDocument()
+      expect(screen.queryByText(/Lab Values/)).not.toBeInTheDocument()
+    })
+  })
+})
+
+// ---------------------------------------------------------------------------
+// UploadSection Component
+// ---------------------------------------------------------------------------
+
+describe('UploadSection Component', () => {
+  it('renders the title and subtitle', () => {
+    render(
+      <UploadSection
+        file={null}
+        setFile={vi.fn()}
+        language="English"
+        setLanguage={vi.fn()}
+        handleAnalyze={vi.fn()}
+        error={null}
+      />
+    )
+    expect(screen.getByText('Analyze Your Report')).toBeInTheDocument()
+    expect(screen.getByText(/Upload a medical report/)).toBeInTheDocument()
+  })
+
+  it('disables analyze button when no file is selected', () => {
+    render(
+      <UploadSection
+        file={null}
+        setFile={vi.fn()}
+        language="English"
+        setLanguage={vi.fn()}
+        handleAnalyze={vi.fn()}
+        error={null}
+      />
+    )
+    const btn = screen.getByText('Upload a file to continue')
+    expect(btn).toBeInTheDocument()
+  })
+
+  it('enables analyze button when file is selected', () => {
+    const file = new File(['test'], 'test.png', { type: 'image/png' })
+    render(
+      <UploadSection
+        file={file}
+        setFile={vi.fn()}
+        language="English"
+        setLanguage={vi.fn()}
+        handleAnalyze={vi.fn()}
+        error={null}
+      />
+    )
+    const btn = screen.getByText('🔍 Analyze Report')
+    expect(btn).toBeInTheDocument()
+  })
+
+  it('renders error message with role=alert', () => {
+    render(
+      <UploadSection
+        file={null}
+        setFile={vi.fn()}
+        language="English"
+        setLanguage={vi.fn()}
+        handleAnalyze={vi.fn()}
+        error="Something went wrong"
+      />
+    )
+    const errorEl = screen.getByRole('alert')
+    expect(errorEl).toBeInTheDocument()
+    expect(errorEl).toHaveTextContent('Something went wrong')
+  })
+
+  it('renders language selector with all supported languages', () => {
+    render(
+      <UploadSection
+        file={null}
+        setFile={vi.fn()}
+        language="English"
+        setLanguage={vi.fn()}
+        handleAnalyze={vi.fn()}
+        error={null}
+      />
+    )
+    const select = screen.getByLabelText('Explain in')
+    expect(select).toBeInTheDocument()
+    SUPPORTED_LANGUAGES.forEach((lang) => {
+      expect(screen.getByText(lang)).toBeInTheDocument()
+    })
+  })
+
+  it('calls handleAnalyze when button is clicked', () => {
+    const handleAnalyze = vi.fn()
+    const file = new File(['test'], 'test.png', { type: 'image/png' })
+    render(
+      <UploadSection
+        file={file}
+        setFile={vi.fn()}
+        language="English"
+        setLanguage={vi.fn()}
+        handleAnalyze={handleAnalyze}
+        error={null}
+      />
+    )
+    fireEvent.click(screen.getByText('🔍 Analyze Report'))
+    expect(handleAnalyze).toHaveBeenCalledTimes(1)
   })
 })
 

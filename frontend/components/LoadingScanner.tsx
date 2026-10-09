@@ -16,6 +16,9 @@ export default function LoadingScanner() {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       className="flex flex-col items-center gap-8 py-16"
+      role="status"
+      aria-live="polite"
+      aria-label="Analyzing your report"
     >
       {/* Scanner animation */}
       <div className="relative w-40 h-52 rounded-2xl overflow-hidden card bg-[var(--color-surface-alt)]">

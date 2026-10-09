@@ -84,6 +84,8 @@ export default function UploadSection({
           animate={{ opacity: 1, y: 0 }}
           className="p-4 rounded-xl bg-[var(--color-surface-alt)] border border-[var(--color-border)] text-[var(--color-foreground)] text-sm"
           id="error-message"
+          role="alert"
+          aria-live="assertive"
         >
           ⚠️ {error}
         </motion.div>

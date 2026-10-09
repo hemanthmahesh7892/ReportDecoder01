@@ -18,6 +18,8 @@ export const metadata: Metadata = {
     "health",
     "AI",
     "multilingual",
+    "lab report",
+    "patient-friendly",
   ],
 };
 
@@ -25,6 +27,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${inter.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col relative overflow-x-hidden text-base">
+        {/* Skip-to-content link for keyboard / screen-reader users */}
+        <a href="#main-content" className="skip-link">
+          Skip to main content
+        </a>
         {children}
       </body>
     </html>
