@@ -7,6 +7,7 @@ rest of the application can remain decoupled from the SDK.
 
 import logging
 import os
+from typing import Any
 
 import google.generativeai as genai
 
@@ -39,18 +40,18 @@ def configure_client() -> None:
             "GEMINI_API_KEY is not set. Add it to backend/.env"
         )
 
-    genai.configure(api_key=GEMINI_API_KEY)
+    genai.configure(api_key=GEMINI_API_KEY)  # type: ignore[attr-defined]
     _client_configured = True
     logger.info("Gemini client configured successfully with model=%s", GEMINI_MODEL)
 
 
-def get_model() -> genai.GenerativeModel:
+def get_model() -> Any:
     """Return a configured ``GenerativeModel`` instance.
 
     Ensures the SDK is configured before returning the model.
 
     Returns:
-        genai.GenerativeModel: A ready-to-use Gemini model instance.
+        Any: A ready-to-use Gemini model instance.
 
     Raises:
         RuntimeError: Propagated from :func:`configure_client` when the
@@ -58,7 +59,7 @@ def get_model() -> genai.GenerativeModel:
 
     """
     configure_client()
-    return genai.GenerativeModel(GEMINI_MODEL)
+    return genai.GenerativeModel(GEMINI_MODEL)  # type: ignore[attr-defined]
 
 
 def reset_client() -> None:

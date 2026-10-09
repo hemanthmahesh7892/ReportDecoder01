@@ -15,19 +15,20 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.9"
+          python-version: "3.12"
           cache: 'pip'
           
       - name: Install backend dependencies
         run: |
           cd backend
           pip install -r requirements.txt
-          pip install pytest httpx pytest-cov ruff
+          pip install pytest httpx pytest-cov ruff mypy
           
-      - name: Run Ruff Lint
+      - name: Run Ruff Lint & Mypy Type Check
         run: |
           cd backend
           python -m ruff check .
+          python -m mypy .
           
       - name: Run Backend Tests
         run: |

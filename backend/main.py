@@ -7,7 +7,7 @@ patient-friendly explanations via the Gemini API.
 import asyncio
 import json
 import logging
-from typing import Union
+from typing import Any, Union
 
 import fitz  # PyMuPDF
 import google.generativeai as genai
@@ -73,7 +73,7 @@ app = FastAPI(
     description="Accepts medical reports and returns patient-friendly explanations via the Gemini API.",
 )
 app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)  # type: ignore[arg-type]
 
 
 @app.exception_handler(Exception)
@@ -282,7 +282,7 @@ async def analyze(
 
     # --- parse response ---
     try:
-        result: dict = json.loads(response_text)
+        result: dict[str, Any] = json.loads(response_text)
     except (json.JSONDecodeError, ValueError) as exc:
         logger.error("Failed to parse Gemini JSON: %s — raw: %s", exc, response_text[:200])
         raise HTTPException(status_code=502, detail=f"Failed to parse Gemini response: {exc}") from exc
